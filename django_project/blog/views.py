@@ -4,7 +4,11 @@ from django.contrib.auth.models import User
 from django.views.generic import (
     ListView, DetailView, CreateView, UpdateView, DeleteView
 )
+
+from rest_framework.viewsets import ModelViewSet
+from rest_framework import permissions
 from .models import Post
+from .serializers import PostSerializer
 
 
 def home(request):
@@ -76,3 +80,15 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 def about(request):
     return render(request, 'blog/about.html', {'title': 'About'})
+
+
+class PostViewSet(ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PostSerializer
+
+    def get_queryset(self):
+        author = User.objects.get(id=self.request.user.id)
+        return Post.objects.filter(author=author)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)

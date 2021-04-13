@@ -1,57 +1,45 @@
 from django.contrib import admin
-from django.contrib.auth import views as auth_views
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.conf.urls import url
 
-from django_project.users import views as user_views
+from rest_framework import permissions
+
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
+app_name = 'Blog'
+
+schema_view = get_schema_view(
+   openapi.Info(
+      title="DJango Blog",
+      default_version='v1',
+      description="Blog do Daniel",
+      terms_of_service="https://www.google.com/policies/terms/",
+      contact=openapi.Contact(email="daniel@gmail.com"),
+      license=openapi.License(name="BSD License"),
+   ),
+   public=True,
+   permission_classes=(permissions.AllowAny),
+)
 
 urlpatterns = [
+    url(
+        r'^swagger(?P<format>\.json|\.yaml)$',
+        schema_view.without_ui(cache_timeout=0), name='schema-json'
+    ),
+    url(
+        r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0),
+        name='schema-swagger-ui'
+    ),
+    url(
+        r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0),
+        name='schema-redoc'
+    ),
     path('admin/', admin.site.urls),
-    path('register/', user_views.register, name='register'),
-    path('profile/', user_views.profile, name='profile'),
-    path(
-        'login/', auth_views.LoginView.as_view(
-            template_name='users/login.html'
-        ),
-        name='login'
-    ),
-    path(
-        'logout/',
-        auth_views.LogoutView.as_view(
-            template_name='users/logout.html'
-        ),
-        name='logout'
-    ),
-    path(
-        'password-reset/',
-        auth_views.PasswordResetView.as_view(
-            template_name='users/password_reset.html'
-        ),
-        name='password_reset'
-    ),
-    path(
-        'password-reset-complete/',
-        auth_views.PasswordResetCompleteView.as_view(
-            template_name='users/password_complete.html'
-        ),
-        name='password_complete'
-    ),
-    path(
-        'password-reset/<uidb64>/<token>/',
-        auth_views.PasswordResetConfirmView.as_view(
-            template_name='users/password_reset_confirm.html'
-            ),
-        name='password_reset_confirm'
-    ),
-    path(
-        'password-reset-confirm/done/',
-        auth_views.PasswordResetDoneView.as_view(
-            template_name='users/password_reset_done.html'
-        ),
-        name='password_reset_done'
-    ),
     path('', include("django_project.blog.urls")),
+    path('', include("django_project.users.urls")),
 ]
 
 if settings.DEBUG:
